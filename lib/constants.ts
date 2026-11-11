@@ -32,26 +32,55 @@ export const ABOUT_PARAGRAPHS = [
 export type SkillCategory = {
   title: string;
   index: string;
-  skills: string[];
+  skills: SkillItem[];
+};
+
+export type SkillItem = {
+  name: string;
+  /** Simple Icons slug — used to construct CDN URL */
+  icon: string;
+  /** Brand hex color */
+  color: string;
+  /** One-line description shown in hover preview */
+  desc: string;
 };
 
 export const SKILLS: SkillCategory[] = [
   {
     title: "Design",
     index: "01",
-    skills: ["UI/UX Design", "User Research", "Wireframing", "Prototyping", "Figma"],
+    skills: [
+      { name: "Figma", icon: "figma", color: "#F24E1E", desc: "Collaborative UI design & prototyping" },
+    ],
   },
   {
     title: "Development",
     index: "02",
-    skills: ["HTML", "CSS", "JavaScript", "TypeScript", "ReactJS", "Next.js", "Tailwind CSS"],
+    skills: [
+      { name: "HTML",         icon: "html5",      color: "#E34F26", desc: "Semantic markup & web structure" },
+      { name: "CSS",          icon: "css3",        color: "#1572B6", desc: "Styling, layout & visual design" },
+      { name: "JavaScript",   icon: "javascript",  color: "#F7DF1E", desc: "Dynamic behaviour & browser APIs" },
+      { name: "TypeScript",   icon: "typescript",  color: "#3178C6", desc: "Typed superset of JavaScript" },
+      { name: "ReactJS",      icon: "react",       color: "#61DAFB", desc: "Component-based UI library" },
+      { name: "Next.js",      icon: "nextdotjs",   color: "#FFFFFF", desc: "Full-stack React framework" },
+      { name: "Tailwind CSS", icon: "tailwindcss", color: "#06B6D4", desc: "Utility-first CSS framework" },
+      { name: "PHP",          icon: "php",         color: "#777BB4", desc: "Server-side scripting language" },
+    ],
   },
   {
     title: "Database & Tools",
     index: "03",
-    skills: ["PHP", "MySQL", "PostgreSQL", "Git", "Visual Studio Code"],
+    skills: [
+      { name: "MySQL",          icon: "mysql",          color: "#4479A1", desc: "Relational database management" },
+      { name: "PostgreSQL",     icon: "postgresql",     color: "#4169E1", desc: "Advanced open-source RDBMS" },
+      { name: "Git",            icon: "git",            color: "#F05032", desc: "Distributed version control" },
+      { name: "VS Code",        icon: "visualstudiocode", color: "#007ACC", desc: "Extensible code editor by Microsoft" },
+    ],
   },
 ] as const;
+
+/* Flat list of all 13 technologies — drives the new grid showcase */
+export const TECH: SkillItem[] = SKILLS.flatMap((c) => [...c.skills]);
 
 export type ExperienceItem = {
   company: string;

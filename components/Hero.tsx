@@ -120,6 +120,7 @@ export default function Hero() {
     <section
       id="home"
       ref={container}
+      data-theme="light"
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-[#e8e8e8]"
       style={{ perspective: "1200px" }}
     >

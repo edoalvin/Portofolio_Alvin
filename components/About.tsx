@@ -64,6 +64,7 @@ export default function About() {
     <section
       id="about"
       ref={container}
+      data-theme="dark"
       className="relative px-6 py-24 md:px-12 md:py-36"
     >
       {/* ── Section label ── */}
