@@ -33,3 +33,4 @@ gsap.registerPlugin(
 
 /* Re-export so components have one import path */
 export { gsap, useGSAP, ScrollTrigger, SplitText, Observer, Flip, Draggable, CustomEase };
+

@@ -1,203 +1,201 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
-import { gsap, useGSAP, SplitText } from "@/lib/gsap";
+import { gsap, useGSAP } from "@/lib/gsap";
 import { prefersReducedMotion } from "@/lib/animations";
-import { PROFILE } from "@/lib/constants";
+
+/* -------------------------------------------------------------------------
+   HERO — full-bleed photo with giant outline marquee behind it
+   Reference: photo fills full viewport height, centered. Behind it, a huge
+   stroke-only (outline) text scrolls slowly left. Light gray background.
+   ------------------------------------------------------------------------- */
+
+// Text is intentionally large and partially clipped — only part shows.
+// Use a short phrase so individual letters are very big on screen.
+const MARQUEE_TEXT = "EDOARDO  ALVIN  NUGROHO  ·  ";
+const MARQUEE_REPEAT = 6;
 
 export default function Hero() {
-  const container = useRef<HTMLDivElement>(null);
-  const overlineRef = useRef<HTMLHeadingElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const imageWrapRef = useRef<HTMLDivElement>(null);
-  const subtitleRef = useRef<HTMLDivElement>(null);
-  const supportRef = useRef<HTMLParagraphElement>(null);
-  const metaRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const parallaxRef = useRef<HTMLDivElement>(null);
-  const introTimeline = useRef<gsap.core.Timeline | null>(null);
+  const container  = useRef<HTMLDivElement>(null);
+  const textRef    = useRef<HTMLDivElement>(null);  // the scrolling outline text
+  const photoRef   = useRef<HTMLDivElement>(null);  // the photo wrapper
+  const labelsRef  = useRef<HTMLDivElement>(null);
+  const introTl    = useRef<gsap.core.Timeline | null>(null);
 
-  useGSAP(
-    () => {
-      // Reduced motion: show everything, no splits.
-      if (prefersReducedMotion()) {
-        gsap.set([metaRef.current, overlineRef.current, headlineRef.current, subtitleRef.current, supportRef.current, imageWrapRef.current, scrollRef.current], { opacity: 1, y: 0, clipPath: "none" });
-        return;
-      }
-
-      // --- Split headline into chars with mask wrappers ---
-      const headlineSplit = new SplitText(headlineRef.current, {
-        type: "chars,words",
-        mask: "chars",
-        aria: "auto",
-      });
-      const overlineSplit = new SplitText(overlineRef.current, {
-        type: "words",
-        mask: "words",
-        aria: "auto",
-      });
-
-      // Intro timeline (paused until preloader signals ready)
-      const tl = gsap.timeline({ paused: true });
-      introTimeline.current = tl;
-
-      tl.set(metaRef.current, { opacity: 0, y: -12 })
-        .set(overlineSplit.words, { yPercent: 115 })
-        .set(headlineSplit.chars, { yPercent: 115 })
-        .set(subtitleRef.current, { opacity: 0, y: 20 })
-        .set(supportRef.current, { opacity: 0, y: 16 })
-        .set(scrollRef.current, { opacity: 0 })
-        .set(imageWrapRef.current, { clipPath: "inset(100% 0 0 0)" }) // fully hidden, reveals downward
-
-        .to(metaRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" })
-        .to(overlineSplit.words, { yPercent: 0, duration: 0.9, ease: "expo-out", stagger: 0.12 }, "<0.1")
-        .to(headlineSplit.chars, { yPercent: 0, duration: 1.1, ease: "expo-out", stagger: 0.022 }, "-=0.4")
-        .to(imageWrapRef.current, { clipPath: "inset(0% 0 0 0)", duration: 1.1, ease: "cinema" }, "-=0.9")
-        .to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.5")
-        .to(supportRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.5")
-        .to(scrollRef.current, { opacity: 1, duration: 0.6, ease: "power2.out" }, "-=0.3");
-
-      return () => {
-        headlineSplit.revert();
-        overlineSplit.revert();
-      };
-    },
-    { scope: container }
-  );
-
-  /* Start intro on preloader-ready (with fallback) */
-  useEffect(() => {
+  /* ── Entrance animation ──────────────────────────────────────────────── */
+  useGSAP(() => {
     if (prefersReducedMotion()) {
-      introTimeline.current?.time(introTimeline.current.duration()).kill();
+      gsap.set([textRef.current, photoRef.current, labelsRef.current], { opacity: 1, y: 0 });
       return;
     }
+
+    const tl = gsap.timeline({ paused: true });
+    introTl.current = tl;
+
+    // Start states
+    tl.set(textRef.current,   { opacity: 0 })
+      .set(photoRef.current,  { opacity: 0, y: 30 })
+      .set(labelsRef.current, { opacity: 0 })
+
+      // Outline text fades in slowly (the "pelan-pelan" feel)
+      .to(textRef.current,   { opacity: 1, duration: 2.2, ease: "power1.inOut" })
+      // Photo rises in
+      .to(photoRef.current,  { opacity: 1, y: 0, duration: 1.4, ease: "expo-out" }, "-=1.8")
+      // Labels follow
+      .to(labelsRef.current, { opacity: 1, duration: 0.9, ease: "power2.out" }, "-=0.7");
+  }, { scope: container });
+
+  /* ── Fire on preloader signal ────────────────────────────────────────── */
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
     let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      introTimeline.current?.play();
-    };
+    const start = () => { if (started) return; started = true; introTl.current?.play(); };
     window.addEventListener("app:ready", start, { once: true });
     const fallback = window.setTimeout(start, 3800);
+    return () => { window.removeEventListener("app:ready", start); window.clearTimeout(fallback); };
+  }, []);
+
+  /* ── Marquee loop (slow horizontal drift) ───────────────────────────── */
+  useEffect(() => {
+    const track = textRef.current?.querySelector<HTMLElement>(".marquee-track");
+    if (!track || prefersReducedMotion()) return;
+
+    const raf = requestAnimationFrame(() => {
+      const halfW = track.scrollWidth / 2;
+      if (!halfW) return;
+      const tween = gsap.to(track, {
+        x: -halfW,
+        duration: 140,        // very slow — cinematic drift
+        ease: "none",
+        repeat: -1,
+        modifiers: { x: (v: string) => `${parseFloat(v) % -halfW}px` },
+      });
+      (track as HTMLElement & { _tween?: gsap.core.Tween })._tween = tween;
+    });
+
     return () => {
-      window.removeEventListener("app:ready", start);
-      window.clearTimeout(fallback);
+      cancelAnimationFrame(raf);
+      (textRef.current?.querySelector<HTMLElement & { _tween?: gsap.core.Tween }>(".marquee-track"))?._tween?.kill();
     };
   }, []);
 
-  /* Subtle mouse parallax (desktop only) */
+  /* ── Semi-3D mouse tilt on photo ─────────────────────────────────────── */
   useEffect(() => {
     if (prefersReducedMotion()) return;
+    const photo   = photoRef.current;
+    const section = container.current;
+    if (!photo || !section) return;
+
     const onMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      gsap.to(parallaxRef.current, {
-        x: x * 14,
-        y: y * 10,
-        duration: 1.2,
+      const rect = section.getBoundingClientRect();
+      const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+      const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+      gsap.to(photo, {
+        rotateY:  dx * 10,
+        rotateX: -dy * 6,
+        duration: 0.9,
         ease: "power2.out",
-      });
-      gsap.to(headlineRef.current, {
-        x: x * -8,
-        duration: 1.2,
-        ease: "power2.out",
+        transformPerspective: 1000,
       });
     };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
+
+    const onLeave = () => {
+      gsap.to(photo, {
+        rotateY: 0, rotateX: 0,
+        duration: 1.4,
+        ease: "elastic.out(1, 0.4)",
+        transformPerspective: 1000,
+      });
+    };
+
+    section.addEventListener("mousemove", onMove, { passive: true });
+    section.addEventListener("mouseleave", onLeave);
+    return () => {
+      section.removeEventListener("mousemove", onMove);
+      section.removeEventListener("mouseleave", onLeave);
+    };
   }, []);
 
   return (
     <section
       id="home"
       ref={container}
-      className="relative flex min-h-[100svh] flex-col justify-between px-6 pt-28 pb-10 md:px-12 md:pt-32"
+      className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-[#e8e8e8]"
+      style={{ perspective: "1200px" }}
     >
-      {/* Top meta row */}
+
+      {/* ── OUTLINE TEXT LAYER — z-0, behind everything ──────────────────── */}
+      {/*
+        Absolutely positioned, vertically centered.
+        Text uses -webkit-text-stroke so it renders as pure outline (no fill).
+        Font size is massive so single characters fill the viewport height.
+      */}
       <div
-        ref={metaRef}
-        className="flex items-start justify-between font-mono text-[0.7rem] uppercase tracking-[0.2em] text-[#a0a0a0]"
+        ref={textRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2 overflow-hidden"
       >
-        <div className="flex flex-col gap-1">
-          <span>{PROFILE.location}</span>
-          <span className="flex items-center gap-2 text-white/70">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400/80 animate-pulse" />
-            {PROFILE.availability}
-          </span>
-        </div>
-        <div className="hidden sm:block text-right">
-          <span>Portfolio — 2025</span>
+        <div
+          className="marquee-track flex items-center whitespace-nowrap font-display font-bold leading-none tracking-tight select-none"
+          style={{
+            fontSize: "clamp(8rem, 24vw, 22rem)",
+            WebkitTextStroke: "1.5px #aaaaaa",   // outline only — no fill
+            color: "transparent",
+            willChange: "transform",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {/* Two identical copies for seamless loop */}
+          <span>{MARQUEE_TEXT.repeat(MARQUEE_REPEAT)}</span>
+          <span aria-hidden="true">{MARQUEE_TEXT.repeat(MARQUEE_REPEAT)}</span>
         </div>
       </div>
 
-      {/* Main hero block */}
-      <div className="relative flex flex-1 flex-col justify-center py-10">
-        <div className="grid grid-cols-1 items-end gap-8 md:grid-cols-[1.7fr_1fr] md:gap-12">
-          {/* Headline column */}
-          <div ref={parallaxRef}>
-            <div className="overflow-hidden">
-              <p
-                ref={overlineRef}
-                className="mb-3 font-display text-[clamp(1rem,3vw,1.75rem)] font-light tracking-[0.05em] text-[#a0a0a0] md:mb-5"
-              >
-                Hello, I&apos;m
-              </p>
-            </div>
-            <div className="overflow-hidden">
-              <h1
-                ref={headlineRef}
-                className="font-display text-[clamp(3rem,13vw,12rem)] font-semibold leading-[0.85] tracking-[-0.04em] text-white"
-              >
-                EDOARDO ALVIN.
-              </h1>
-            </div>
-          </div>
-
-          {/* Hero image with reveal */}
-          <div className="hidden md:block">
-            <div
-              ref={imageWrapRef}
-              className="relative aspect-[3/4] w-full overflow-hidden border border-[#1a1a1a]"
-            >
-              <Image
-                src="https://picsum.photos/seed/edoardo-hero/800/1000"
-                alt="Editorial portrait placeholder"
-                fill
-                className="object-cover"
-                sizes="40vw"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Subtitle + supporting text */}
-        <div className="mt-10 grid grid-cols-1 gap-6 md:mt-14 md:grid-cols-[1.7fr_1fr] md:gap-12">
-          <div ref={subtitleRef} className="max-w-2xl">
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/80">
-              {PROFILE.title}
-            </p>
-          </div>
-          <p
-            ref={supportRef}
-            className="max-w-md text-sm leading-relaxed text-[#a0a0a0] md:text-base"
-          >
-            {PROFILE.tagline}
-          </p>
-        </div>
+      {/* ── PHOTO LAYER — z-10, in front of text ─────────────────────────── */}
+      {/*
+        Anchored to the bottom of the section, full height + a bit more so
+        it bleeds edge-to-edge. The SVG portrait is dead-center of the
+        landscape canvas so object-position:center crops it naturally.
+      */}
+      <div
+        ref={photoRef}
+        className="absolute bottom-0 left-1/2 z-10 -translate-x-1/2"
+        style={{ transformStyle: "preserve-3d", height: "105svh", width: "auto" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/image/Header Image.svg"
+          alt="Edoardo Alvin Nugroho"
+          style={{
+            height: "100%",
+            width: "auto",
+            maxWidth: "none",
+            display: "block",
+            userSelect: "none",
+            pointerEvents: "none",
+            filter: "drop-shadow(0 24px 48px rgba(0,0,0,0.18))",
+          }}
+        />
       </div>
 
-      {/* Scroll indicator */}
+      {/* ── ROLE LABELS — z-20, over everything ─────────────────────────── */}
+      {/*
+        "UI/UX Designer" bottom-left, "Front-End Developer" bottom-right.
+        Horizontal this time — no vertical rotation — matching the ref style.
+      */}
       <div
-        ref={scrollRef}
-        className="flex items-center justify-center gap-3 pt-2"
+        ref={labelsRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-10 left-0 right-0 z-20 flex items-end justify-between px-8 md:px-16"
       >
-        <span className="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-[#a0a0a0]">
-          Scroll
+        <span className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-[#333]">
+          UI/UX Designer
         </span>
-        <div className="scroll-indicator" aria-hidden="true" />
+        <span className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-[#333]">
+          Front-End Developer
+        </span>
       </div>
+
     </section>
   );
 }

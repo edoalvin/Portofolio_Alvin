@@ -79,7 +79,7 @@ export default function Preloader() {
           ref={nameRef}
           className="font-display text-[clamp(1.75rem,7vw,5rem)] font-semibold tracking-tight text-white text-center leading-[0.95]"
         >
-          EDOARDO ALVIN
+          EDOARDO ALVIN NUGROHO
         </div>
       </div>
 

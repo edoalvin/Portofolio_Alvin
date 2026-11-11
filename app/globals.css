@@ -158,11 +158,15 @@ img { display: block; max-width: 100%; }
   position: relative;
   overflow: hidden;
 }
+/* Light-background variant — override track color via inline style parent */
+.scroll-indicator[style] {
+  background: rgba(0,0,0,0.12);
+}
 .scroll-indicator::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: #fff;
+  background: var(--scroll-trace-bg, #fff);
   transform: translateY(-100%);
   animation: scroll-trace 2.2s var(--ease-cinema) infinite;
 }
