@@ -2,44 +2,46 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "@/lib/gsap";
-import { NAV_ITEMS, PROFILE } from "@/lib/constants";
+import { NAV_ITEMS } from "@/lib/constants";
 import { useNavigateTo } from "@/components/TransitionProvider";
 import { prefersReducedMotion } from "@/lib/animations";
 
 export default function Navigation() {
   const navigateTo = useNavigateTo();
-  const [active, setActive]     = useState<string>("home");
-  const [scrolled, setScrolled] = useState(false);
-  const [onLight, setOnLight]   = useState(true);   // true = over the light hero
+  const [active, setActive] = useState<string>("home");
+  const [onLight, setOnLight] = useState(true); // true = navbar over the light hero
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef   = useRef<HTMLDivElement>(null);
-  const itemsRef  = useRef<HTMLDivElement>(null);
-  const burgerRef = useRef<HTMLButtonElement>(null);
+  const menuRef  = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<HTMLDivElement>(null);
 
-  /* ── Detect scroll position to toggle bg + text colour ──────────────── */
+  /* ── Light / dark detection ──────────────────────────────────────────── */
+  // "onLight" = the hero section's bottom edge is still above the navbar.
+  // As soon as the hero scrolls past, we flip to white-on-dark.
   useEffect(() => {
     const heroEl = document.getElementById("home");
+    const NAV_H = 80; // approx navbar height in px
 
     const update = () => {
-      const y = window.scrollY;
-      setScrolled(y > 40);
-      // "on light" while the hero section is still filling the viewport top
-      const heroBottom = heroEl ? heroEl.getBoundingClientRect().bottom : 0;
-      setOnLight(heroBottom > 60);
+      if (!heroEl) { setOnLight(false); return; }
+      // hero bottom relative to viewport
+      const heroBottom = heroEl.getBoundingClientRect().bottom;
+      setOnLight(heroBottom > NAV_H);
     };
 
     update();
     window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    // also re-check on resize (orientation change etc.)
+    window.addEventListener("resize", update, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   /* ── Active section detection ────────────────────────────────────────── */
   useEffect(() => {
-    const sections = NAV_ITEMS.map((n) => document.getElementById(n.id)).filter(
-      Boolean
-    ) as HTMLElement[];
+    const sections = NAV_ITEMS.map((n) => document.getElementById(n.id)).filter(Boolean) as HTMLElement[];
     if (!sections.length) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -53,7 +55,7 @@ export default function Navigation() {
     return () => observer.disconnect();
   }, []);
 
-  /* ── Mobile menu open/close animation ───────────────────────────────── */
+  /* ── Mobile menu animation ───────────────────────────────────────────── */
   useEffect(() => {
     const menu  = menuRef.current;
     const items = itemsRef.current;
@@ -73,10 +75,7 @@ export default function Navigation() {
       return () => { tl.kill(); };
     } else {
       document.body.style.overflow = "";
-      if (prefersReducedMotion()) {
-        gsap.set(menu, { display: "none" });
-        return;
-      }
+      if (prefersReducedMotion()) { gsap.set(menu, { display: "none" }); return; }
       const tl = gsap.timeline();
       tl.to(items.children, { y: -40, opacity: 0, stagger: 0.04, duration: 0.3, ease: "power2.in" })
         .to(menu, { opacity: 0, duration: 0.3, ease: "power2.in" }, "-=0.1")
@@ -89,43 +88,40 @@ export default function Navigation() {
     window.setTimeout(() => navigateTo(id), menuOpen ? 350 : 0);
   };
 
-  /* ── Derived colour tokens ───────────────────────────────────────────── */
-  // Over the light hero: dark text, light/transparent bg
-  // Over dark sections (scrolled past hero): white text, dark bg
-  const textColor   = onLight ? "text-[#111]"      : "text-white";
-  const subColor    = onLight ? "text-[#555]"      : "text-[#a0a0a0]";
-  const activeColor = onLight ? "text-[#111]"      : "text-white";
-  const burgerBg    = onLight ? "bg-[#111]"        : "bg-white";
-
-  const headerBg = scrolled && !onLight
-    ? "bg-[#050505]/85 backdrop-blur-md border-b border-[#1a1a1a]"
-    : onLight && scrolled
-    ? "bg-[#e8e8e8]/85 backdrop-blur-md border-b border-[#ccc]"
-    : "bg-transparent border-b border-transparent";
+  /* ── Style tokens — two modes only, no intermediate states ──────────── */
+  const logoClass  = onLight ? "text-[#111111]" : "text-white";
+  const linkActive = onLight ? "text-[#111111]" : "text-white";
+  const linkIdle   = onLight ? "text-[#555555]" : "text-[#a0a0a0]";
+  const linkHover  = onLight ? "hover:text-[#111111]" : "hover:text-white";
+  const burgerLine = onLight ? "bg-[#111111]" : "bg-white";
+  // Header background: transparent on the hero (no bg panel), blurred dark on dark sections
+  const headerBg   = onLight
+    ? "bg-transparent"
+    : "bg-[#050505]/90 backdrop-blur-md border-b border-[#1a1a1a]";
 
   return (
     <>
-      <header className={`fixed top-0 left-0 z-[8000] w-full transition-colors duration-500 ${headerBg}`}>
+      <header className={`fixed top-0 left-0 z-[8000] w-full transition-all duration-500 ${headerBg}`}>
         <nav className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5 md:px-12 md:py-7">
 
           {/* Logo */}
           <button
             onClick={() => handleNav("home")}
-            className={`font-display text-sm font-semibold tracking-tight transition-colors duration-500 md:text-base ${textColor}`}
+            className={`font-display text-sm font-semibold tracking-tight transition-colors duration-500 md:text-base ${logoClass}`}
             aria-label="Go to home"
           >
             EDOARDO ALVIN NUGROHO
           </button>
 
-          {/* Desktop nav links */}
+          {/* Desktop links */}
           <ul className="hidden md:flex items-center gap-10">
             {NAV_ITEMS.map((item) => (
               <li key={item.id}>
                 <button
                   onClick={() => handleNav(item.id)}
                   data-cursor=""
-                  className={`nav-link group flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.2em] transition-colors duration-300 ${
-                    active === item.id ? activeColor : `${subColor} hover:${onLight ? "text-[#111]" : "text-white"}`
+                  className={`nav-link font-mono text-[0.7rem] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                    active === item.id ? linkActive : `${linkIdle} ${linkHover}`
                   }`}
                 >
                   <span className="relative">
@@ -139,39 +135,30 @@ export default function Navigation() {
 
           {/* Mobile burger */}
           <button
-            ref={burgerRef}
             onClick={() => setMenuOpen((o) => !o)}
             className="md:hidden relative z-[8100] flex h-8 w-8 flex-col items-center justify-center gap-[6px]"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
           >
-            <span
-              className={`block h-px w-6 transition-all duration-300 ${burgerBg} ${
-                menuOpen ? "translate-y-[3.5px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`block h-px w-6 transition-all duration-300 ${burgerBg} ${
-                menuOpen ? "-translate-y-[3.5px] -rotate-45" : ""
-              }`}
-            />
+            <span className={`block h-px w-6 transition-all duration-300 ${burgerLine} ${menuOpen ? "translate-y-[3.5px] rotate-45" : ""}`} />
+            <span className={`block h-px w-6 transition-all duration-300 ${burgerLine} ${menuOpen ? "-translate-y-[3.5px] -rotate-45" : ""}`} />
           </button>
         </nav>
       </header>
 
-      {/* Mobile fullscreen menu (always dark) */}
+      {/* Mobile fullscreen menu */}
       <div
         ref={menuRef}
-        className="fixed inset-0 z-[7900] hidden flex-col items-start justify-center gap-2 bg-[#050505] px-6 md:hidden"
+        className="fixed inset-0 z-[7900] hidden flex-col items-start justify-center bg-[#050505] px-8 md:hidden"
       >
-        <div ref={itemsRef} className="flex flex-col gap-3 w-full">
+        <div ref={itemsRef} className="flex flex-col gap-2 w-full">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNav(item.id)}
-              className="group flex items-baseline gap-4 py-2 text-left"
+              className="group py-3 text-left"
             >
-              <span className="font-display text-[clamp(2.5rem,12vw,4.5rem)] font-semibold leading-none tracking-tight text-white transition-colors group-hover:text-white/70">
+              <span className="font-display text-[clamp(2.5rem,12vw,4.5rem)] font-semibold leading-none tracking-tight text-white transition-colors group-hover:text-white/60">
                 {item.label}
               </span>
             </button>
