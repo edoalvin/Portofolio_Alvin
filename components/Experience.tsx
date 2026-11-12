@@ -74,10 +74,11 @@ export default function Experience() {
     <section
       id="experience"
       ref={container}
+      data-theme="dark"
       className="relative px-6 py-24 md:px-12 md:py-40 border-t border-[#1a1a1a]"
+      style={{ background: "#050505" }}
     >
-      <div className="mb-16 flex items-baseline gap-6 md:mb-24">
-        <span className="font-mono text-xs tracking-[0.2em] text-white/40">(04)</span>
+      <div className="mb-16 md:mb-24">
         <p className="label-mono text-white/50">Experience</p>
       </div>
 
@@ -90,11 +91,8 @@ export default function Experience() {
         </h2>
       </div>
 
-      {/* Timeline */}
       <div ref={timelineRef} className="relative ml-1 md:ml-3">
-        {/* Track */}
         <div className="absolute left-0 top-0 h-full w-px bg-[#1a1a1a]" />
-        {/* Fill line */}
         <div
           ref={lineFillRef}
           className="absolute left-0 top-0 h-full w-px origin-top bg-white"
@@ -104,7 +102,6 @@ export default function Experience() {
         <div className="space-y-16 pl-10 md:pl-16">
           {EXPERIENCES.map((exp, i) => (
             <div key={i} className="timeline-entry relative">
-              {/* Node */}
               <span
                 className="timeline-node absolute -left-[1.5rem] top-1 flex h-3 w-3 -translate-x-1/2 items-center justify-center md:-left-[2.1rem]"
                 style={{ opacity: 0 }}
@@ -114,14 +111,12 @@ export default function Experience() {
               </span>
 
               <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-12">
-                {/* Period column */}
                 <div className="md:col-span-3">
                   <p className="timeline-reveal font-mono text-xs uppercase tracking-[0.2em] text-[#a0a0a0]">
                     {exp.period}
                   </p>
                 </div>
 
-                {/* Content column */}
                 <div className="md:col-span-9 group">
                   <h3 className="timeline-reveal font-display text-3xl font-semibold tracking-tight text-white md:text-5xl">
                     {exp.company}
@@ -134,9 +129,8 @@ export default function Experience() {
                     {exp.responsibilities.map((r, j) => (
                       <li
                         key={j}
-                        className="timeline-li flex gap-3 text-base leading-relaxed text-[#a0a0a0] transition-colors duration-300 group-hover:text-white/80"
+                        className="timeline-li text-base leading-relaxed text-[#a0a0a0] transition-colors duration-300"
                       >
-                        <span className="mt-2 h-px w-5 flex-shrink-0 bg-white/30" />
                         <span>{r}</span>
                       </li>
                     ))}
@@ -146,13 +140,12 @@ export default function Experience() {
             </div>
           ))}
 
-          {/* Continuing marker */}
           <div className="relative">
             <span className="absolute -left-[1.5rem] top-0 flex h-3 w-3 -translate-x-1/2 items-center justify-center md:-left-[2.1rem]">
               <span className="block h-2 w-2 rounded-full bg-white/40" />
             </span>
             <p className="pl-0 font-mono text-xs uppercase tracking-[0.2em] text-white/40">
-              — Currently open to new chapters
+              Currently open to new chapters
             </p>
           </div>
         </div>

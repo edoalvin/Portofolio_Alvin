@@ -56,7 +56,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#050505] text-white font-body selection:bg-white selection:text-black">
+      <body className="min-h-full bg-white text-[#0a0a0a] font-body selection:bg-[#0a0a0a] selection:text-white">
         {children}
       </body>
     </html>

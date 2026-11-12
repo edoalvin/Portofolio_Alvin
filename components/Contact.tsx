@@ -59,11 +59,12 @@ export default function Contact() {
     <section
       id="contact"
       ref={container}
+      data-theme="dark"
       className="relative flex min-h-[100svh] flex-col justify-between px-6 pt-24 md:px-12 md:pt-32 border-t border-[#1a1a1a]"
+      style={{ background: "#050505" }}
     >
       <div>
-        <div className="mb-16 flex items-baseline gap-6 md:mb-24">
-          <span className="font-mono text-xs tracking-[0.2em] text-white/40">(06)</span>
+        <div className="mb-16 md:mb-24">
           <p className="label-mono text-white/50">Contact</p>
         </div>
 
@@ -77,7 +78,6 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Main email magnetic link */}
       <div className="flex flex-col gap-12 py-16 md:py-24">
         <div className="flex flex-col gap-3">
           <p className="label-mono text-white/40">Get in touch</p>
@@ -102,7 +102,6 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Social links */}
         <div className="flex flex-wrap gap-x-10 gap-y-4">
           {SOCIALS.filter((s) => s.type !== "email").map((s) => (
             <a
@@ -122,14 +121,13 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Minimal footer */}
       <footer className="mt-auto border-t border-[#1a1a1a] py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <p className="contact-footer-item font-mono text-[0.7rem] uppercase tracking-[0.2em] text-white/50">
             © {year} {PROFILE.name}
           </p>
           <p className="contact-footer-item font-mono text-[0.7rem] uppercase tracking-[0.2em] text-white/50">
-            {PROFILE.location} — Designed &amp; Built with care
+            {PROFILE.location} · Designed &amp; Built with care
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

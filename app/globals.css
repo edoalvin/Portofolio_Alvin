@@ -28,7 +28,7 @@
    BASE
    ========================================================================== */
 :root {
-  color-scheme: dark;
+  color-scheme: normal;
 }
 
 * {
@@ -42,8 +42,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-bone);
+  background: #ffffff;
+  color: #0a0a0a;
   font-family: var(--font-body), system-ui, sans-serif;
   font-weight: 400;
   line-height: 1.6;
@@ -54,8 +54,8 @@ body {
 }
 
 ::selection {
-  background: var(--color-bone);
-  color: var(--color-ink);
+  background: #0a0a0a;
+  color: #ffffff;
 }
 
 /* Typography */
@@ -101,14 +101,13 @@ img { display: block; max-width: 100%; }
   pointer-events: none;
   z-index: 9999;
   border-radius: 50%;
-  mix-blend-mode: difference;
   will-change: transform;
 }
 
 .cursor-dot {
   width: 7px;
   height: 7px;
-  background: #fff;
+  background: #0a0a0a;
   margin: -3.5px 0 0 -3.5px;
 }
 
@@ -116,7 +115,7 @@ img { display: block; max-width: 100%; }
   width: 42px;
   height: 42px;
   margin: -21px 0 0 -21px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,7 +128,7 @@ img { display: block; max-width: 100%; }
   font-size: 0.5rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #fff;
+  color: #0a0a0a;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -213,10 +212,15 @@ img { display: block; max-width: 100%; }
 /* ==========================================================================
    SCROLLBAR
    ========================================================================== */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--color-ink); }
-::-webkit-scrollbar-thumb { background: #2a2a2a; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+/* Use thin scrollbar to avoid white strip on the right edge */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c8c8c8 transparent;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c8c8c8; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
 
 /* ==========================================================================
    ACCESSIBILITY — REDUCED MOTION
@@ -235,7 +239,7 @@ img { display: block; max-width: 100%; }
 
 /* Focus visible for keyboard users */
 :focus-visible {
-  outline: 2px solid var(--color-bone);
+  outline: 2px solid #0a0a0a;
   outline-offset: 3px;
 }
 

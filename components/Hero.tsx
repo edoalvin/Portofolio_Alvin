@@ -121,7 +121,7 @@ export default function Hero() {
       id="home"
       ref={container}
       data-theme="light"
-      className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-[#e8e8e8]"
+      className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-white"
       style={{ perspective: "1200px" }}
     >
 
@@ -140,7 +140,7 @@ export default function Hero() {
           className="marquee-track flex items-center whitespace-nowrap font-display font-bold leading-none tracking-tight select-none"
           style={{
             fontSize: "clamp(8rem, 24vw, 22rem)",
-            WebkitTextStroke: "1.5px #aaaaaa",   // outline only — no fill
+            WebkitTextStroke: "1.5px #cccccc",   // outline only — no fill
             color: "transparent",
             willChange: "transform",
             letterSpacing: "-0.02em",

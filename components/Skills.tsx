@@ -32,8 +32,8 @@ const iconSrc = (slug: string) => `https://cdn.simpleicons.org/${slug}`;
 
 /* ── Palette ─────────────────────────────────────────────────────────── */
 const C = {
-  bg:          "#F5F0E8",
-  bgCircle:    "#EAE5DC",
+  bg:          "#ffffff",
+  bgCircle:    "#f0f0f0",
   border:      "rgba(0,0,0,0.09)",
   borderHover: "rgba(0,0,0,0.20)",
   separator:   "rgba(0,0,0,0.10)",
@@ -116,10 +116,10 @@ export default function Skills() {
     const tl = gsap.timeline({
       scrollTrigger: { trigger: sec, start: "top 90%", end: "top 20%", scrub: 1.4 },
     });
-    tl.to(sec,              { backgroundColor: C.bg,       ease: "none" }, 0)
-      .to(eyebrowRef.current, { color: C.eyebrow,          ease: "none" }, 0)
-      .to(headingRef.current, { color: C.heading,          ease: "none" }, 0)
-      .to(subtitleRef.current,{ color: C.subtitle,         ease: "none" }, 0);
+    tl.to(sec,                { backgroundColor: C.bg,      ease: "none" }, 0)
+      .to(eyebrowRef.current, { color: C.eyebrow,           ease: "none" }, 0)
+      .to(headingRef.current, { color: C.heading,           ease: "none" }, 0)
+      .to(subtitleRef.current,{ color: C.subtitle,          ease: "none" }, 0);
 
     return () => { tl.kill(); };
   }, []);

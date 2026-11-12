@@ -10,23 +10,25 @@ export const PROFILE = {
   shortTitle: "UI/UX Designer & Developer",
   location: "Indonesia",
   availability: "Available for opportunities",
-  education: "Information Systems Graduate — Satya Wacana Christian University",
+  education: "Information Systems Graduate, Satya Wacana Christian University",
   tagline:
     "I design meaningful digital experiences and build functional interfaces with a focus on usability, creativity, and detail.",
 } as const;
 
 export const NAV_ITEMS = [
-  { id: "home", label: "Home", index: "01" },
-  { id: "about", label: "About", index: "02" },
-  { id: "work", label: "Work", index: "03" },
-  { id: "contact", label: "Contact", index: "04" },
+  { id: "home",    label: "Home",    index: "01" },
+  { id: "about",   label: "About",   index: "02" },
+  { id: "skills",  label: "Skills",  index: "03" },
+  { id: "work",    label: "Work",    index: "04" },
+  { id: "contact", label: "Contact", index: "05" },
 ] as const;
 
 export const ABOUT_PARAGRAPHS = [
-  "I'm Edoardo Alvin Nugroho, a UI/UX designer and front-end developer based in Indonesia. I care about the small details that turn a good interface into a great experience — the rhythm of a layout, the weight of a typeface, the moment a page responds to a gesture.",
-  "I graduated in Information Systems from Satya Wacana Christian University, where I built a foundation in both design thinking and software development. That dual perspective lets me move comfortably between Figma and code, reasoning about the user and the system at once.",
-  "My professional interest sits at the intersection of usability and craft. I'm drawn to editorial layouts, motion that earns its place, and interfaces that feel considered rather than assembled. I prototype early, question assumptions, and refine until the result feels inevitable.",
-  "My approach is methodical but never rigid. I research before I design, design before I build, and measure what I make. I believe the best work happens when structure and spontaneity meet — when a clear system leaves room for a single, deliberate surprise.",
+  "Hey, I'm Edoardo Alvin Nugroho, a UI/UX Designer and Front-End Developer based in Indonesia.",
+  "I enjoy creating digital experiences and paying attention to the little details that make a difference. From layouts and typography to colors and interactions, I believe every element has a role in making a website feel right.",
+  "I graduated in Information Systems from Satya Wacana Christian University. During my studies, I developed an interest in both design and web development, which led me to explore how ideas can go from a simple design in Figma to a working website.",
+  "I'm always curious to try new things, explore different approaches, and improve the way I work. I enjoy experimenting with layouts, creating smooth interactions, and finding ways to make interfaces both visually appealing and easy to use.",
+  "For me, good design isn't just about how something looks. It's about how it works, how it feels, and the experience people take away from it.",
 ] as const;
 
 export type SkillCategory = {
@@ -93,7 +95,7 @@ export const EXPERIENCES: ExperienceItem[] = [
   {
     company: "AirNav Indonesia",
     role: "Work Practice / Internship",
-    period: "August 2025 – December 2025",
+    period: "August 2025 to December 2025",
     responsibilities: [
       "Updated and maintained employee operational data.",
       "Reviewed employee certifications and license validity.",
@@ -112,7 +114,9 @@ export type Project = {
   tags: string[];
   year: string;
   category: string;
-  /** placeholder image seed for picsum */
+  /** local image path under /public, or null to use picsum */
+  imagePath: string | null;
+  /** placeholder image seed for picsum (used when imagePath is null) */
   imageSeed: string;
   /** layout variant controls the asymmetric grid placement */
   span: "wide" | "normal" | "tall";
@@ -123,52 +127,42 @@ export const PROJECTS: Project[] = [
     id: "bina-widya",
     index: "01",
     title: "Bina Widya School",
-    tagline: "A multilingual school website concept.",
+    tagline: "A multilingual website concept for Bina Widya School.",
     description:
-      "A bilingual school website designed end-to-end through a design-thinking process — from user research and wireframes to a high-fidelity multilingual prototype that serves both local and international audiences.",
-    tags: ["UI/UX Design", "Design Thinking", "User Research", "Wireframing", "Prototyping"],
-    year: "2024",
+      "Designed with students, parents, and teachers in mind. The project covers the entire design process, from understanding user needs and creating wireframes to building a high-fidelity prototype in three languages: Indonesian, English, and Mandarin.",
+    tags: ["UI/UX Design", "Design Thinking", "Wireframing", "Prototyping"],
+    year: "2025, 2026",
     category: "Design",
-    imageSeed: "school-editorial",
+    imagePath: "/image/Binwid mockup.png.jpeg",
+    imageSeed: "bina-widya",
     span: "wide",
   },
   {
     id: "iatca-yogyakarta",
     index: "02",
     title: "IATCA Yogyakarta",
-    tagline: "An association website, built front to back.",
+    tagline: "A website built for an aviation training association.",
     description:
-      "A full multi-page website for an aviation training association — Home, About, News, Gallery, and Contact — built with PHP and MySQL and styled with Tailwind CSS.",
-    tags: ["Front-End Development", "PHP", "MySQL", "Tailwind CSS"],
-    year: "2024",
+      "A multi-page website for IATCA Yogyakarta, featuring Home, About, News, Gallery, and Contact pages. Built using PHP and MySQL, with a focus on making organizational information easy to access.",
+    tags: ["Front-End Development", "PHP", "MySQL"],
+    year: "2025",
     category: "Development",
-    imageSeed: "aviation-architecture",
+    imagePath: "/image/IATCA mockup.png",
+    imageSeed: "iatca",
     span: "normal",
   },
   {
-    id: "airnav-ops",
-    index: "03",
-    title: "AirNav Operations System",
-    tagline: "An internal operational data platform.",
-    description:
-      "An internal, web-based operational data management system for AirNav Indonesia. It centralises employee data management and operational information so staff can maintain records and recaps in one place.",
-    tags: ["Internal System", "Employee Data", "Operational Data", "Web App"],
-    year: "2025",
-    category: "Development",
-    imageSeed: "ops-dashboard",
-    span: "tall",
-  },
-  {
     id: "bhstore",
-    index: "04",
+    index: "03",
     title: "BHstore",
-    tagline: "A full-stack e-commerce experience.",
+    tagline: "An online store built from the ground up.",
     description:
-      "A full-stack e-commerce storefront built with Next.js, with Prisma managing the data layer and PostgreSQL as the database — covering products, cart, and a clean, conversion-focused checkout flow.",
+      "An e-commerce website built with Next.js, Prisma, and PostgreSQL, featuring product browsing, shopping cart, and checkout functionality.",
     tags: ["E-commerce", "Next.js", "Prisma", "PostgreSQL"],
-    year: "2025",
+    year: "2026",
     category: "Full-Stack",
-    imageSeed: "ecommerce-store",
+    imagePath: "/image/Bhstore mockup,png.jpeg",
+    imageSeed: "bhstore",
     span: "normal",
   },
 ] as const;
@@ -187,8 +181,9 @@ export const SOCIALS: SocialLink[] = [
 
 /* Section transition copy shown during curtain navigation */
 export const TRANSITION_COPY: Record<string, string> = {
-  home: "WELCOME",
-  about: "ABOUT ME",
-  work: "SELECTED WORK",
+  home:    "WELCOME",
+  about:   "ABOUT ME",
+  skills:  "THE TOOLKIT",
+  work:    "SELECTED WORK",
   contact: "GET IN TOUCH",
 };

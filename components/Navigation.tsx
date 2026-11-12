@@ -6,49 +6,73 @@ import { NAV_ITEMS } from "@/lib/constants";
 import { useNavigateTo } from "@/components/TransitionProvider";
 import { prefersReducedMotion } from "@/lib/animations";
 
+/*
+  HYDRATION SAFETY
+  ─────────────────
+  The server has no DOM, so it cannot know scroll position or which section
+  is at the top of the viewport.  We must render identical HTML on both
+  server and client on the first pass, then update state via useEffect.
+
+  Safe initial values that match the server output:
+    · onLight     = true   (page starts at the light hero)
+    · heroVisible = true   (hero is visible at page-load)
+    · mounted     = false  (gates any DOM-reading inside render)
+
+  On the first client render (before any effect fires), all three are still
+  at their initial values → same classes as the server → no mismatch.
+  After mount, the scroll-listener effect runs once, reads the real DOM,
+  and sets the correct values.
+*/
+
 export default function Navigation() {
   const navigateTo = useNavigateTo();
-  const [active,   setActive]   = useState<string>("home");
-  const [onLight,  setOnLight]  = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
+
+  /* Deterministic defaults — MUST match server render */
+  const [mounted,     setMounted]     = useState(false);   // true only after hydration
+  const [onLight,     setOnLight]     = useState(true);    // hero is light
+  const [heroVisible, setHeroVisible] = useState(true);    // start at top
+  const [active,      setActive]      = useState<string>("home");
+  const [menuOpen,    setMenuOpen]    = useState(false);
+
   const menuRef  = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
 
-  /* ─────────────────────────────────────────────────────────────────────
-     THEME DETECTION
-     Strategy: each section has data-theme="light|dark".
-     The skills section is special — it scrubs from dark to light as it
-     enters, so we DON'T trust data-theme there while it's still dark.
-     Instead we check the section's scroll progress to know if the scrub
-     has actually completed (bg is cream) before switching to light mode.
-  ───────────────────────────────────────────────────────────────────── */
+  /* ── Mount flag — prevents any DOM access during SSR render ─────────── */
   useEffect(() => {
-    const NAV_H = 72; // navbar height px
+    setMounted(true);
+  }, []);
+
+  /* ── Theme + hero-visibility detection (runs only after mount) ───────── */
+  useEffect(() => {
+    if (!mounted) return;
+
+    const NAV_H = 72;
 
     const getTheme = (): "light" | "dark" => {
       const sections = Array.from(
         document.querySelectorAll<HTMLElement>("section[data-theme]")
       );
-
-      // Find which section's bounding box straddles the navbar bottom edge
       for (const sec of sections) {
         const rect = sec.getBoundingClientRect();
-        if (rect.top > NAV_H) continue;   // hasn't reached navbar yet
-        if (rect.bottom <= NAV_H) continue; // already scrolled past
+        if (rect.top > NAV_H)    continue;
+        if (rect.bottom <= NAV_H) continue;
 
         const rawTheme = sec.dataset.theme as "light" | "dark";
 
-        // Skills section: only report "light" once the bg scrub is far
-        // enough along. We define "enough" as: the section top has passed
-        // 20% of the viewport (same as the scrub `end: "top 10%"` → by
-        // the time rect.top <= -viewport*0.0 it's fully cream).
-        if (sec.id === "skills") {
-          // rect.top is negative once section top is above viewport top.
-          // Scrub goes from "top 90%" (sec.top = 90% vh) to "top 10%"
-          // (sec.top = 10% vh).  We switch to light once sec.top <= 40% vh.
-          const pct = rect.top / window.innerHeight; // 1 → 0 → negative
-          if (pct > 0.4) return "dark";   // scrub not far enough — still dark visually
-          return rawTheme;
+        // For sections that scrub from dark to light, read the actual
+        // computed background colour to know if the scrub has completed.
+        // We consider it "light" only once the section's bg luminance is
+        // above ~40% (i.e. mid-grey or brighter).
+        if (sec.id === "skills" || sec.id === "work") {
+          const bg = window.getComputedStyle(sec).backgroundColor;
+          // Parse rgb(r,g,b) — if any component can't be read, trust data-theme
+          const match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (match) {
+            const r = parseInt(match[1]), g = parseInt(match[2]), b = parseInt(match[3]);
+            // Perceived luminance threshold: if avg channel < 128, still dark
+            const avg = (r + g + b) / 3;
+            return avg > 100 ? "light" : "dark";
+          }
         }
 
         return rawTheme;
@@ -56,22 +80,33 @@ export default function Navigation() {
       return "dark";
     };
 
-    const update = () => setOnLight(getTheme() === "light");
+    const getHeroVisible = (): boolean => {
+      const hero = document.getElementById("home");
+      return hero ? hero.getBoundingClientRect().bottom > NAV_H : false;
+    };
 
+    const update = () => {
+      setOnLight(getTheme() === "light");
+      setHeroVisible(getHeroVisible());
+    };
+
+    // Run once immediately after mount to sync with real scroll position
     update();
+
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update, { passive: true });
     return () => {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, []);
+  }, [mounted]);
 
   /* ── Active section ──────────────────────────────────────────────────── */
   useEffect(() => {
     const sections = NAV_ITEMS.map((n) => document.getElementById(n.id))
       .filter(Boolean) as HTMLElement[];
     if (!sections.length) return;
+
     const obs = new IntersectionObserver(
       (entries) => {
         const v = entries
@@ -90,6 +125,7 @@ export default function Navigation() {
     const menu  = menuRef.current;
     const items = itemsRef.current;
     if (!menu || !items) return;
+
     if (menuOpen) {
       document.body.style.overflow = "hidden";
       if (prefersReducedMotion()) {
@@ -117,36 +153,30 @@ export default function Navigation() {
     window.setTimeout(() => navigateTo(id), menuOpen ? 350 : 0);
   };
 
-  /* ── Tokens ──────────────────────────────────────────────────────────── */
+  /* ── Style tokens — adapt to light/dark section ─────────────────────── */
   const logoClass  = onLight ? "text-[#111]"      : "text-white";
   const linkActive = onLight ? "text-[#111]"      : "text-white";
   const linkIdle   = onLight ? "text-[#555]"      : "text-[#a0a0a0]";
   const linkHover  = onLight ? "hover:text-[#111]": "hover:text-white";
   const burgerLine = onLight ? "bg-[#111]"        : "bg-white";
 
-  // headerBg logic:
-  // · Over hero (light bg, no scroll) → transparent, blends with #e8e8e8
-  // · Over skills cream section → cream panel
-  // · Over any dark section → dark panel
-  // onLight is already computed from data-theme + scroll-pct,
-  // and the skills section only returns "light" once pct <= 0.4.
-  // For the hero we simply check if the hero section's bottom is still
-  // visible — if yes, go transparent; skills cream gets its own bg.
-  const heroStillVisible = (() => {
-    if (typeof window === "undefined") return true;
-    const hero = document.getElementById("home");
-    return hero ? hero.getBoundingClientRect().bottom > 72 : false;
-  })();
-
+  /*
+    headerBg:
+    · Over hero (light, heroVisible)        → transparent, blends with white
+    · Over any light section (not hero)     → white/90 frosted
+    · Over any dark section (about/exp/contact) → dark/90 frosted
+  */
   const headerBg = !onLight
     ? "bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.06]"
-    : heroStillVisible
+    : heroVisible
       ? "bg-transparent border-b border-transparent"
-      : "bg-[#F5F0E8]/90 backdrop-blur-md border-b border-black/10";
+      : "bg-white/90 backdrop-blur-md border-b border-black/[0.06]";
 
   return (
     <>
-      <header className={`fixed top-0 left-0 z-[8000] w-full transition-all duration-500 ${headerBg}`}>
+      <header
+        className={`fixed top-0 left-0 z-[8000] w-full transition-all duration-500 ${headerBg}`}
+      >
         <nav className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5 md:px-12 md:py-7">
           <button
             onClick={() => handleNav("home")}
@@ -193,7 +223,11 @@ export default function Navigation() {
       >
         <div ref={itemsRef} className="flex flex-col gap-2 w-full">
           {NAV_ITEMS.map((item) => (
-            <button key={item.id} onClick={() => handleNav(item.id)} className="group py-3 text-left">
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.id)}
+              className="group py-3 text-left"
+            >
               <span className="font-display text-[clamp(2.5rem,12vw,4.5rem)] font-semibold leading-none tracking-tight text-white transition-colors group-hover:text-white/60">
                 {item.label}
               </span>
