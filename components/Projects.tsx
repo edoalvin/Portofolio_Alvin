@@ -5,37 +5,41 @@ import { gsap, useGSAP, ScrollTrigger, SplitText } from "@/lib/gsap";
 import { PROJECTS } from "@/lib/constants";
 
 /*
-  PROJECTS
-  ─────────
-  · Pure white background — no scrub, consistent with the whole site.
-  · data-theme="light" so navbar shows dark text.
-  · Compact header: label + heading, minimal bottom padding before first panel.
-  · Desktop: stage pins to top of viewport and horizontal track scrolls.
-    scrub: 2 gives smooth, deliberate scrolling — each panel stays visible
-    long enough that users see the full project before the next arrives.
-  · Images: object-contain so the full mockup is always visible, no cropping.
-  · Counter (dot-nav + readout): rendered INSIDE the section as a sticky bar
-    at the bottom of the stage — NOT as a fixed/global overlay. Completely
-    hidden when the section is not in view (the pin handles this naturally
-    because the elements are children of the stage).
+  WORK SECTION — ARCHITECTURE
+  ────────────────────────────
+  The sticky header + pinned track live inside ONE wrapper (sectionRef).
+
+  Layout when pinned:
+  ┌─────────────────────────────┐  ← viewport top (navbar fixed above)
+  │ sticky header  ~120px       │  ← headerRef: position sticky top:72px
+  ├─────────────────────────────┤
+  │                             │
+  │  project track (flex-row)   │  ← trackRef: gets translateX()
+  │                             │
+  └─────────────────────────────┘  ← viewport bottom
+
+  GSAP pins sectionRef.
+  The pin trigger starts when sectionRef top hits the NAVBAR bottom (72px),
+  so the section is already at the top with the header visible.
+  The end is: pinStart + (track.scrollWidth - viewport.width).
+  trackRef only gets translateX — header is never transformed.
 */
 
-/* Cream palette matching Toolkit */
-const BG   = "#ffffff";
-const DARK = "#050505";
+const BG      = "#ffffff";
+const DARK    = "#050505";
+const NAV_H   = 72;   // px — fixed navbar height
 
 export default function Projects() {
-  const sectionRef  = useRef<HTMLElement>(null);
-  const headerRef   = useRef<HTMLDivElement>(null);
-  const headingRef  = useRef<HTMLHeadingElement>(null);
-  const eyebrowRef  = useRef<HTMLParagraphElement>(null);
-  const stageRef    = useRef<HTMLDivElement>(null);
-  const trackRef    = useRef<HTMLDivElement>(null);
-  const indexRef    = useRef<HTMLSpanElement>(null);
-  const triggerRef  = useRef<ScrollTrigger | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef  = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const eyebrowRef = useRef<HTMLParagraphElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const indexRef   = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<ScrollTrigger | null>(null);
   const [active, setActive] = useState(0);
 
-  /* ── Background scrub dark → cream ──────────────────────────────────── */
+  /* ── Background scrub dark → white ──────────────────────────────────── */
   useEffect(() => {
     const r   = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
     const sec = sectionRef.current;
@@ -53,19 +57,19 @@ export default function Projects() {
     return () => { tl.kill(); };
   }, []);
 
-  /* ── Heading reveal + horizontal pin ────────────────────────────────── */
+  /* ── Heading reveal + horizontal scroll ─────────────────────────────── */
   useGSAP(() => {
     if (typeof window === "undefined") return;
     const reduced = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
 
-    /* Heading */
+    /* Heading word-reveal */
     const split = new SplitText(headingRef.current, {
       type: "words", mask: "words", aria: "auto",
     });
     const headTl = gsap.timeline({
       scrollTrigger: {
-        trigger: stageRef.current,
-        start: "top 90%",
+        trigger: headerRef.current,
+        start: "top 85%",
         toggleActions: "play none none reverse",
       },
     });
@@ -77,29 +81,34 @@ export default function Projects() {
 
     const mm = gsap.matchMedia();
 
-    /* ── Desktop horizontal pin ── */
+    /* ── Desktop: pin the SECTION, translate only the TRACK ── */
     mm.add("(min-width: 768px) and (prefers-reduced-motion:no-preference)", () => {
+      const sec   = sectionRef.current!;
       const track = trackRef.current!;
-      const stage = stageRef.current!;
+      const hdr   = headerRef.current!;
 
-      const getAmount = () => track.scrollWidth - window.innerWidth;
+      /*
+        We pin the whole section.
+        The pin starts when the section top reaches the NAVBAR bottom (NAV_H).
+        This means the section slides up until its top touches the navbar,
+        then freezes — the header is visible at top:NAV_H and the track
+        fills the remaining viewport height below it.
+
+        scrollAmount = how far the track must travel horizontally.
+        Each panel is 100vw → (count-1) × 100vw, using scrollWidth diff.
+      */
+      const getScrollAmount = () => track.scrollWidth - window.innerWidth;
 
       const tween = gsap.to(track, {
-        x: () => -getAmount(),
+        x: () => -getScrollAmount(),
         ease: "none",
         scrollTrigger: {
-          trigger: stage,
-          start: "top top",
-          end: () => `+=${getAmount()}`,
-          /*
-            scrub: 2.5 — deliberate, unhurried scroll.
-            Each panel is one full viewport wide; with scrub:2.5 the user
-            needs to scroll ~2.5× the panel width to fully traverse it,
-            giving ample time to read the content before the next panel
-            enters. No snap, no lock — purely physical scroll mapping.
-          */
+          trigger: sec,
+          start: () => `top ${NAV_H}px`,
+          end:   () => `+=${getScrollAmount()}`,
           scrub: 2.5,
-          pin: true,
+          pin:   true,
+          pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -111,7 +120,7 @@ export default function Projects() {
       });
       triggerRef.current = tween.scrollTrigger!;
 
-      /* Per-panel reveals — tied to containerAnimation */
+      /* Per-panel reveals */
       gsap.utils.toArray<HTMLElement>(".project-panel").forEach((panel) => {
         const img = panel.querySelector<HTMLElement>(".project-img");
         const txt = panel.querySelectorAll<HTMLElement>(".project-reveal");
@@ -128,11 +137,9 @@ export default function Projects() {
             }
           );
         }
-
         if (txt.length) {
           gsap.from(txt, {
-            opacity: 0, y: 24,
-            duration: 0.65, ease: "power2.out", stagger: 0.07,
+            opacity: 0, y: 24, duration: 0.65, ease: "power2.out", stagger: 0.07,
             scrollTrigger: {
               trigger: panel, containerAnimation: tween,
               start: "left 75%",
@@ -143,7 +150,7 @@ export default function Projects() {
       });
     });
 
-    /* ── Mobile vertical reveals ── */
+    /* ── Mobile / reduced-motion: vertical stack ── */
     mm.add("(max-width: 767px), (prefers-reduced-motion:reduce)", () => {
       gsap.utils.toArray<HTMLElement>(".project-panel").forEach((panel) => {
         const img = panel.querySelector<HTMLElement>(".project-img");
@@ -169,7 +176,6 @@ export default function Projects() {
     return () => { split.revert(); mm.revert(); };
   }, { scope: sectionRef });
 
-  /* Navigate to panel (desktop) */
   const goToPanel = (p: number) => {
     const trigger = triggerRef.current;
     if (!trigger) return;
@@ -190,38 +196,49 @@ export default function Projects() {
       className="relative"
       style={{ background: DARK }}
     >
-      {/* ── PINNED STAGE ── */}
+      {/*
+        HEADER — stays at the top of the pinned section.
+        It is NOT sticky here (the whole section is pinned by GSAP, so the
+        section stays in place — the header is naturally at the top of it).
+        On mobile it just scrolls normally.
+      */}
       <div
-        ref={stageRef}
-        className="relative overflow-hidden md:h-screen md:flex md:flex-col"
+        ref={headerRef}
+        className="relative z-10 px-6 pb-4 pt-8 md:px-16 md:pb-6 md:pt-10"
       >
-        {/* Section heading — flush at the top of the pinned viewport */}
-        <div
-          ref={headerRef}
-          className="flex-shrink-0 px-6 pt-10 pb-6 md:px-16 md:pt-12 md:pb-8"
+        <p
+          ref={eyebrowRef}
+          className="label-mono mb-3"
+          style={{ color: "rgba(0,0,0,0.38)" }}
         >
-          <p
-            ref={eyebrowRef}
-            className="label-mono mb-3"
-            style={{ color: "rgba(0,0,0,0.38)" }}
+          Work
+        </p>
+        <div className="overflow-hidden">
+          <h2
+            ref={headingRef}
+            className="font-display text-[clamp(2rem,4.5vw,3.75rem)] font-semibold leading-[0.9] tracking-[-0.04em]"
+            style={{ color: "#0a0a0a" }}
           >
-            Work
-          </p>
-          <div className="overflow-hidden">
-            <h2
-              ref={headingRef}
-              className="font-display text-[clamp(2rem,4.5vw,3.75rem)] font-semibold leading-[0.9] tracking-[-0.04em]"
-              style={{ color: "#0a0a0a" }}
-            >
-              Selected projects.
-            </h2>
-          </div>
+            Selected projects.
+          </h2>
         </div>
+      </div>
 
-        {/* Horizontal track — fills remaining height after heading */}
+      {/*
+        TRACK WRAPPER — overflow:hidden clips the horizontal track.
+        On desktop this fills the remaining viewport height below the header.
+        height: calc(100svh - NAV_H - headerHeight). We approximate the
+        header height with a CSS calc; JS will handle exact sizing via
+        invalidateOnRefresh on the ScrollTrigger.
+      */}
+      <div
+        className="relative overflow-hidden"
+        style={{ height: "calc(100svh - 72px - 120px)" }}
+      >
+        {/* Horizontal track — ONLY this element receives translateX */}
         <div
           ref={trackRef}
-          className="flex flex-col md:flex-1 md:w-max md:flex-row md:items-stretch"
+          className="flex flex-col md:h-full md:w-max md:flex-row md:items-center"
         >
           {PROJECTS.map((project, i) => {
             const flip = i % 2 === 1;
@@ -233,7 +250,7 @@ export default function Projects() {
                   md:flex-row md:items-center md:h-full md:w-screen md:py-0 md:px-16
                   ${flip ? "md:flex-row-reverse" : ""}`}
               >
-                {/* Image — 16:9 frame, object-contain, no white bands */}
+                {/* Image */}
                 <div className="w-full flex-shrink-0 md:w-[52%]">
                   <div
                     className="project-img relative w-full overflow-hidden border aspect-video"
@@ -292,7 +309,7 @@ export default function Projects() {
                   </div>
 
                   <button
-                    className="project-reveal group mt-1 hidden w-fit items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.25em] transition-colors md:flex"
+                    className="project-reveal group mt-1 hidden w-fit items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.25em] md:flex"
                     style={{ color: "rgba(0,0,0,0.38)" }}
                     onClick={() => goToPanel(Math.min(i + 1, PROJECTS.length - 1))}
                     aria-label="Next project"
@@ -307,37 +324,28 @@ export default function Projects() {
             );
           })}
         </div>
+      </div>
 
-        {/*
-          COUNTER — absolute inside the stage (NOT fixed/global).
-          Only visible while the stage is pinned = only while user is in
-          the Projects section. Disappears naturally when pin releases.
-        */}
-        <div className="hidden md:flex absolute bottom-6 left-0 right-0 items-center justify-center gap-6 pointer-events-none">
-          {/* Dot nav */}
-          <div className="flex items-center gap-3 pointer-events-auto">
-            {PROJECTS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goToPanel(i)}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  active === i ? "w-8" : "w-4"
-                }`}
-                style={{ background: active === i ? "#0a0a0a" : "rgba(0,0,0,0.20)" }}
-                aria-label={`Go to project ${i + 1}`}
-              />
-            ))}
-          </div>
-
-          {/* Index readout */}
-          <div
-            className="font-mono text-xs tracking-[0.2em] pointer-events-none"
-            style={{ color: "rgba(0,0,0,0.35)" }}
-          >
-            <span ref={indexRef}>1</span>
-            <span className="mx-1 opacity-40">/</span>
-            {String(PROJECTS.length)}
-          </div>
+      {/* Counter — always below the track, inside the pinned section */}
+      <div className="hidden md:flex h-14 items-center justify-center gap-6 pointer-events-none">
+        <div className="flex items-center gap-3 pointer-events-auto">
+          {PROJECTS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goToPanel(i)}
+              className={`h-1 rounded-full transition-all duration-300 ${active === i ? "w-8" : "w-4"}`}
+              style={{ background: active === i ? "#0a0a0a" : "rgba(0,0,0,0.20)" }}
+              aria-label={`Go to project ${i + 1}`}
+            />
+          ))}
+        </div>
+        <div
+          className="font-mono text-xs tracking-[0.2em] pointer-events-none"
+          style={{ color: "rgba(0,0,0,0.35)" }}
+        >
+          <span ref={indexRef}>1</span>
+          <span className="mx-1 opacity-40">/</span>
+          {String(PROJECTS.length)}
         </div>
       </div>
     </section>
