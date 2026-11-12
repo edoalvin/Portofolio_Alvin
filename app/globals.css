@@ -210,17 +210,24 @@ img { display: block; max-width: 100%; }
 }
 
 /* ==========================================================================
-   SCROLLBAR
+   SCROLLBAR — theme-aware via CSS custom property
+   --sb-track is updated by Navigation.tsx scroll listener so the track
+   colour matches whichever section is currently visible (dark or light).
    ========================================================================== */
-/* Use thin scrollbar to avoid white strip on the right edge */
+html {
+  scrollbar-gutter: stable;
+  --sb-track: #ffffff;    /* default: white (hero is white) */
+  --sb-thumb: rgba(120,120,120,0.45);
+  --sb-thumb-hover: rgba(80,80,80,0.65);
+}
 * {
   scrollbar-width: thin;
-  scrollbar-color: #c8c8c8 transparent;
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
 }
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c8c8c8; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: var(--sb-track); }
+::-webkit-scrollbar-thumb    { background: var(--sb-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sb-thumb-hover); }
 
 /* ==========================================================================
    ACCESSIBILITY — REDUCED MOTION

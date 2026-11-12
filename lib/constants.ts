@@ -131,9 +131,9 @@ export const PROJECTS: Project[] = [
     description:
       "Designed with students, parents, and teachers in mind. The project covers the entire design process, from understanding user needs and creating wireframes to building a high-fidelity prototype in three languages: Indonesian, English, and Mandarin.",
     tags: ["UI/UX Design", "Design Thinking", "Wireframing", "Prototyping"],
-    year: "2025, 2026",
+    year: "2025-2026",
     category: "Design",
-    imagePath: "/image/Binwid mockup.png.jpeg",
+    imagePath: "/image/Binwid.png",
     imageSeed: "bina-widya",
     span: "wide",
   },

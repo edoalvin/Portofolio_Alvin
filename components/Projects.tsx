@@ -64,8 +64,8 @@ export default function Projects() {
     });
     const headTl = gsap.timeline({
       scrollTrigger: {
-        trigger: headerRef.current,
-        start: "top 78%",
+        trigger: stageRef.current,
+        start: "top 90%",
         toggleActions: "play none none reverse",
       },
     });
@@ -105,7 +105,7 @@ export default function Projects() {
           onUpdate: (self) => {
             const i = Math.round(self.progress * (PROJECTS.length - 1));
             setActive(i);
-            if (indexRef.current) indexRef.current.textContent = String(i + 1).padStart(2, "0");
+            if (indexRef.current) indexRef.current.textContent = String(i + 1);
           },
         },
       });
@@ -190,38 +190,38 @@ export default function Projects() {
       className="relative"
       style={{ background: DARK }}
     >
-      {/* ── HEADER — compact, sits above the pin ── */}
-      <div
-        ref={headerRef}
-        className="px-6 pt-16 pb-8 md:px-12 md:pt-20 md:pb-10"
-      >
-        <p
-          ref={eyebrowRef}
-          className="label-mono mb-4"
-          style={{ color: "rgba(0,0,0,0.38)" }}
-        >
-          Work
-        </p>
-        <div className="overflow-hidden">
-          <h2
-            ref={headingRef}
-            className="font-display text-[clamp(2.5rem,6vw,5rem)] font-semibold leading-[0.9] tracking-[-0.04em]"
-            style={{ color: "#0a0a0a" }}
-          >
-            Selected projects.
-          </h2>
-        </div>
-      </div>
-
       {/* ── PINNED STAGE ── */}
       <div
         ref={stageRef}
-        className="relative overflow-hidden md:h-screen"
+        className="relative overflow-hidden md:h-screen md:flex md:flex-col"
       >
-        {/* Horizontal track */}
+        {/* Section heading — flush at the top of the pinned viewport */}
+        <div
+          ref={headerRef}
+          className="flex-shrink-0 px-6 pt-10 pb-6 md:px-16 md:pt-12 md:pb-8"
+        >
+          <p
+            ref={eyebrowRef}
+            className="label-mono mb-3"
+            style={{ color: "rgba(0,0,0,0.38)" }}
+          >
+            Work
+          </p>
+          <div className="overflow-hidden">
+            <h2
+              ref={headingRef}
+              className="font-display text-[clamp(2rem,4.5vw,3.75rem)] font-semibold leading-[0.9] tracking-[-0.04em]"
+              style={{ color: "#0a0a0a" }}
+            >
+              Selected projects.
+            </h2>
+          </div>
+        </div>
+
+        {/* Horizontal track — fills remaining height after heading */}
         <div
           ref={trackRef}
-          className="flex flex-col md:h-full md:w-max md:flex-row md:items-stretch"
+          className="flex flex-col md:flex-1 md:w-max md:flex-row md:items-stretch"
         >
           {PROJECTS.map((project, i) => {
             const flip = i % 2 === 1;
@@ -229,21 +229,21 @@ export default function Projects() {
               <article
                 key={project.id}
                 className={`project-panel flex flex-col justify-center
-                  px-6 py-14
+                  px-6 py-10
                   md:flex-row md:items-center md:h-full md:w-screen md:py-0 md:px-16
                   ${flip ? "md:flex-row-reverse" : ""}`}
               >
-                {/* Image — object-contain so full mockup is always visible */}
-                <div className="w-full flex-shrink-0 md:w-[52%] md:h-[68vh]">
+                {/* Image — 16:9 frame, object-contain, no white bands */}
+                <div className="w-full flex-shrink-0 md:w-[52%]">
                   <div
-                    className="project-img relative w-full h-full overflow-hidden border aspect-video md:aspect-auto"
-                    style={{ borderColor: "rgba(0,0,0,0.08)", background: "#f8f8f8" }}
+                    className="project-img relative w-full overflow-hidden border aspect-video"
+                    style={{ borderColor: "rgba(0,0,0,0.08)", background: "#f4f4f4" }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={project.imagePath ?? `https://picsum.photos/seed/${project.imageSeed}/1200/800`}
                       alt={project.title}
-                      className="w-full h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-contain"
                       draggable={false}
                     />
                   </div>
@@ -334,9 +334,9 @@ export default function Projects() {
             className="font-mono text-xs tracking-[0.2em] pointer-events-none"
             style={{ color: "rgba(0,0,0,0.35)" }}
           >
-            <span ref={indexRef}>01</span>
+            <span ref={indexRef}>1</span>
             <span className="mx-1 opacity-40">/</span>
-            {String(PROJECTS.length).padStart(2, "0")}
+            {String(PROJECTS.length)}
           </div>
         </div>
       </div>

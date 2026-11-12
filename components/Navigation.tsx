@@ -86,8 +86,13 @@ export default function Navigation() {
     };
 
     const update = () => {
-      setOnLight(getTheme() === "light");
+      const theme = getTheme();
+      const isLight = theme === "light";
+      setOnLight(isLight);
       setHeroVisible(getHeroVisible());
+      // Sync scrollbar track colour with current section background
+      const trackColor = isLight ? "#ffffff" : "#050505";
+      document.documentElement.style.setProperty("--sb-track", trackColor);
     };
 
     // Run once immediately after mount to sync with real scroll position
