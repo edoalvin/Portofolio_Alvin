@@ -226,10 +226,7 @@ export default function Projects() {
 
       {/*
         TRACK WRAPPER — overflow:hidden clips the horizontal track.
-        On desktop this fills the remaining viewport height below the header.
-        height: calc(100svh - NAV_H - headerHeight). We approximate the
-        header height with a CSS calc; JS will handle exact sizing via
-        invalidateOnRefresh on the ScrollTrigger.
+        Position relative so the counter can be absolute inside it.
       */}
       <div
         className="relative overflow-hidden"
@@ -324,30 +321,33 @@ export default function Projects() {
             );
           })}
         </div>
+
+        {/* Counter — absolute at the bottom of the track wrapper.
+            Lives outside trackRef so it's never translated horizontally.
+            Always visible during the horizontal pin. */}
+        <div className="hidden md:flex absolute bottom-0 left-0 right-0 h-14 items-center justify-center gap-6 pointer-events-none z-10">
+          <div className="flex items-center gap-3 pointer-events-auto">
+            {PROJECTS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPanel(i)}
+                className={`h-1 rounded-full transition-all duration-300 ${active === i ? "w-8" : "w-4"}`}
+                style={{ background: active === i ? "#0a0a0a" : "rgba(0,0,0,0.20)" }}
+                aria-label={`Go to project ${i + 1}`}
+              />
+            ))}
+          </div>
+          <div
+            className="font-mono text-xs tracking-[0.2em] pointer-events-none"
+            style={{ color: "rgba(0,0,0,0.35)" }}
+          >
+            <span ref={indexRef}>1</span>
+            <span className="mx-1 opacity-40">/</span>
+            {String(PROJECTS.length)}
+          </div>
+        </div>
       </div>
 
-      {/* Counter — always below the track, inside the pinned section */}
-      <div className="hidden md:flex h-14 items-center justify-center gap-6 pointer-events-none">
-        <div className="flex items-center gap-3 pointer-events-auto">
-          {PROJECTS.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToPanel(i)}
-              className={`h-1 rounded-full transition-all duration-300 ${active === i ? "w-8" : "w-4"}`}
-              style={{ background: active === i ? "#0a0a0a" : "rgba(0,0,0,0.20)" }}
-              aria-label={`Go to project ${i + 1}`}
-            />
-          ))}
-        </div>
-        <div
-          className="font-mono text-xs tracking-[0.2em] pointer-events-none"
-          style={{ color: "rgba(0,0,0,0.35)" }}
-        >
-          <span ref={indexRef}>1</span>
-          <span className="mx-1 opacity-40">/</span>
-          {String(PROJECTS.length)}
-        </div>
-      </div>
     </section>
   );
 }
