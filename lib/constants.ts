@@ -93,15 +93,16 @@ export type ExperienceItem = {
 
 export const EXPERIENCES: ExperienceItem[] = [
   {
+    company: "PT Brantas Abipraya",
+    role: "MagangHub / Internship",
+    period: "2026 — Present",
+    responsibilities: [],
+  },
+  {
     company: "AirNav Indonesia",
     role: "Work Practice / Internship",
-    period: "August 2025 to December 2025",
-    responsibilities: [
-      "Updated and maintained employee operational data.",
-      "Reviewed employee certifications and license validity.",
-      "Assisted with monthly operational data recaps.",
-      "Participated in developing an internal web-based operational data management system.",
-    ],
+    period: "August 2025 — December 2025",
+    responsibilities: [],
   },
 ] as const;
 
